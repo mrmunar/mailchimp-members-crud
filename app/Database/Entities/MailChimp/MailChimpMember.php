@@ -164,6 +164,16 @@ class MailChimpMember extends MailChimpEntity
     }
 
     /**
+     * Get list id.
+     *
+     * @return null|string
+     */
+    public function getListId(): ?string
+    {
+        return $this->listId;
+    }
+
+    /**
      * Get validation rules for mailchimp entity.
      *
      * @return array
@@ -229,7 +239,7 @@ class MailChimpMember extends MailChimpEntity
      *
      * @return MailChimpMember
      */
-    public function setInterests(array $interests): MailChimpMember
+    public function setInterests(?array $interests): MailChimpMember
     {
         $this->interests = $interests;
 

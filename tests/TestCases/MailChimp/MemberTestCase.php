@@ -32,10 +32,10 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     protected static $memberData = [
         'email_address' => 'migs.morales@gmail.com',
         'email_type' => 'html',
-        'status' => 'pending',
+        'status' => 'subscribed',
         'merge_fields' => [
-            'FNAME' => 'John',
-            'LNAME' => 'Doe'
+            'FNAME' => 'Johdsdn',
+            'LNAME' => 'Dosdse'
         ],
         'language' => '',
         'vip' => false,
@@ -46,8 +46,8 @@ abstract class MemberTestCase extends WithDatabaseTestCase
         'marketing_permissions' => [],
         'ip_signup' => '',
         'timestamp_signup' => '',
-        'ip_opt' => '198.2.191.34',
-        'timestamp_opt' => '2018-09-22 10:00:00'
+        'ip_opt' => '',
+        'timestamp_opt' => ''
     ];
 
     /**
@@ -108,14 +108,14 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     public function tearDown(): void
     {
         /** @var Mailchimp $mailChimp */
-        $mailChimp = $this->app->make(Mailchimp::class);
+        // $mailChimp = $this->app->make(Mailchimp::class);
 
-        foreach ($this->createdMemberIds as $memberId) {
-            // Delete list on MailChimp after test
-            $mailChimp->delete(\sprintf('lists/%s/members/%s', $this->listId, $memberId));
-        }
+        // foreach ($this->createdMemberIds as $memberId) {
+        //     // Delete list on MailChimp after test
+        //     $mailChimp->delete(\sprintf('lists/%s/members/%s', $this->listId, $memberId));
+        // }
 
-        $mailChimp->delete(\sprintf('lists/%s', $this->listId));
+        // $mailChimp->delete(\sprintf('lists/%s', $this->listId));
 
         parent::tearDown();
     }
@@ -131,9 +131,6 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     {
         $content = \json_decode($this->response->content(), true);
 
-        var_dump($content);
-
-        $this->assertResponseStatus(404);
         self::assertArrayHasKey('message', $content);
         self::assertRegexp('^(?=.*\bMailChimpMember\b)(?=.*\bnot\b)(?=.*\bfound\b).*$^', $content['message']);
     }
@@ -157,15 +154,21 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     /**
      * Create MailChimp member into database.
      *
-     * @param array $data
-     *
      * @return \App\Database\Entities\MailChimp\MailChimpMember
      */
-    protected function createMember(array $data): MailChimpMember
+    protected function createMember(): MailChimpMember
     {
-        $data = array_merge($data, ['list_id' => $this->listId]);
-        $member = new MailChimpMember($data);
+        $member = $this->getMemberData();
 
+        $this->post(\sprintf('/mailchimp/lists/%s/members', $this->listId), $member);
+        $member = \json_decode($this->response->content(), true);
+
+        if (isset($member['mail_chimp_id'])) {
+            $this->createdMemberIds[] = $member['mail_chimp_id']; // Store MailChimp list id for cleaning purposes
+        }
+
+        $member = array_merge($member, ['list_id' => $this->listId]);
+        $member = new MailChimpMember($member);
         $this->entityManager->persist($member);
         $this->entityManager->flush();
 
@@ -181,7 +184,7 @@ abstract class MemberTestCase extends WithDatabaseTestCase
      */
     protected function createList(array $data): MailChimpList
     {
-        $response = $this->post('/mailchimp/lists', $data);
+        $this->post('/mailchimp/lists', $data);
         $list = \json_decode($this->response->content(), true);
         
         $list = new MailChimpList($list);
@@ -210,10 +213,11 @@ abstract class MemberTestCase extends WithDatabaseTestCase
      */
     protected function getMemberData(): Array
     {
-        $udatedMemberData = static::$memberData;
+        $updatedMemberData = static::$memberData;
         // "Dynamic Email"
-        $udatedMemberData['email_address'] = substr(md5(strval(time())), 0, 8) . '@gmail.com';
-        return $udatedMemberData;
+        $updatedMemberData['email_address'] = substr(md5(strval(time())), 0, 8) . '@gmail.com';
+
+        return $updatedMemberData;
     }
 
     /**

@@ -30,7 +30,7 @@ class MembersControllerTest extends MemberTestCase
     {
         /** @noinspection PhpParamsInspection Mock given on purpose */
         $controller = new MembersController($this->entityManager, $this->mockMailChimpForException('delete'));
-        $member = $this->createMember(static::$memberData);
+        $member = $this->createMember();
 
         // If there is no member id, skip
         if (null === $member->getId()) {
