@@ -83,7 +83,7 @@ class MembersController extends Controller
     {
         /** @var \App\Database\Entities\MailChimp\MailChimpMember|null $member */
         $member = $this->entityManager->getRepository(MailChimpMember::class)
-            ->findBy(array('list_id' => $listId, 'subscriber_hash' => $subscriberHash));
+            ->findOneBy(array('listId' => $listId, 'subscriberHash' => $subscriberHash));
 
         if ($member === null) {
             return $this->errorResponse(
@@ -122,7 +122,7 @@ class MembersController extends Controller
         }
 
         /** @var \App\Database\Entities\MailChimp\MailChimpMember|null $member */
-        $member = $this->entityManager->getRepository(MailChimpMember::class)->findBy($filters);
+        $member = $this->entityManager->getRepository(MailChimpMember::class)->findOneBy($filters);
 
         if ($member === null) {
             return $this->errorResponse(
@@ -146,7 +146,7 @@ class MembersController extends Controller
     {
         /** @var \App\Database\Entities\MailChimp\MailChimpmember|null $member */
         $member = $this->entityManager->getRepository(MailChimpMember::class)
-            ->findBy(array('list_id' => $listId, 'subscriber_hash' => $subscriberHash));
+            ->findOneBy(array('listId' => $listId, 'subscriberHash' => $subscriberHash));
 
         if ($member === null) {
             return $this->errorResponse(

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Tests\App\Unit\Http\Controllers\MailChimp;
 
 use App\Http\Controllers\MailChimp\MembersController;
-use Tests\App\TestCases\MailChimp\MembersTestCase;
+use Tests\App\TestCases\MailChimp\MemberTestCase;
 
 class MembersControllerTest extends MemberTestCase
 {
@@ -18,7 +18,7 @@ class MembersControllerTest extends MemberTestCase
         /** @noinspection PhpParamsInspection Mock given on purpose */
         $controller = new MembersController($this->entityManager, $this->mockMailChimpForException('post'));
 
-        $this->assertMailChimpExceptionResponse($controller->create($this->getRequest(static::$memberData)));
+        $this->assertMailChimpExceptionResponse($controller->create($this->getRequest(static::$memberData), $this->listId));
     }
 
     /**
@@ -29,7 +29,7 @@ class MembersControllerTest extends MemberTestCase
     public function testRemoveMemberMailChimpException(): void
     {
         /** @noinspection PhpParamsInspection Mock given on purpose */
-        $controller = new MemberController($this->entityManager, $this->mockMailChimpForException('delete'));
+        $controller = new MembersController($this->entityManager, $this->mockMailChimpForException('delete'));
         $member = $this->createMember(static::$memberData);
 
         // If there is no member id, skip
@@ -39,7 +39,7 @@ class MembersControllerTest extends MemberTestCase
             return;
         }
 
-        $this->assertMailChimpExceptionResponse($controller->remove($member->getId()));
+        $this->assertMailChimpExceptionResponse($controller->remove($this->listId, $member->getSubscriberHash()));
     }
 
     /**
@@ -60,6 +60,6 @@ class MembersControllerTest extends MemberTestCase
             return;
         }
 
-        $this->assertMailChimpExceptionResponse($controller->update($this->getRequest(), $member->getId()));
+        $this->assertMailChimpExceptionResponse($controller->update($this->getRequest(), $this->listId, $member->getSubscriberHash()));
     }
 }

@@ -30,16 +30,12 @@ abstract class MemberTestCase extends WithDatabaseTestCase
      * @var array
      */
     protected static $memberData = [
-        'email_address' => 'test@test.com',
+        'email_address' => 'migs.morales@gmail.com',
         'email_type' => 'html',
         'status' => 'pending',
         'merge_fields' => [
             'FNAME' => 'John',
             'LNAME' => 'Doe'
-        ],
-        'interests' => [
-            '9143cf3bd1' => true,
-            '3a2a927344'=> false
         ],
         'language' => '',
         'vip' => false,
@@ -52,6 +48,35 @@ abstract class MemberTestCase extends WithDatabaseTestCase
         'timestamp_signup' => '',
         'ip_opt' => '198.2.191.34',
         'timestamp_opt' => '2018-09-22 10:00:00'
+    ];
+
+    /**
+     * @var array
+     */
+    protected static $listData = [
+        'name' => 'New list',
+        'permission_reminder' => 'You signed up for updates on Greeks economy.',
+        'email_type_option' => false,
+        'contact' => [
+            'company' => 'Doe Ltd.',
+            'address1' => 'DoeStreet 1',
+            'address2' => '',
+            'city' => 'Doesy',
+            'state' => 'Doedoe',
+            'zip' => '1672-12',
+            'country' => 'US',
+            'phone' => '55533344412'
+        ],
+        'campaign_defaults' => [
+            'from_name' => 'John Doe',
+            'from_email' => 'john@doe.com',
+            'subject' => 'My new campaign!',
+            'language' => 'US'
+        ],
+        'visibility' => 'prv',
+        'use_archive_bar' => false,
+        'notify_on_subscribe' => 'notify@loyaltycorp.com.au',
+        'notify_on_unsubscribe' => 'notify@loyaltycorp.com.au'
     ];
 
     /**
@@ -71,8 +96,8 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     {
         parent::setUp();
 
-        $list = $this->createList($this->getListData);
-        $this->listId = $list->getId();
+        $list = $this->createList($this->getListData());
+        $this->listId = $list->getMailChimpId();
     }
 
     /**
@@ -85,10 +110,12 @@ abstract class MemberTestCase extends WithDatabaseTestCase
         /** @var Mailchimp $mailChimp */
         $mailChimp = $this->app->make(Mailchimp::class);
 
-        foreach ($this->createdMembers as $member) {
+        foreach ($this->createdMemberIds as $memberId) {
             // Delete list on MailChimp after test
-            $mailChimp->delete(\sprintf('lists/%s/members/%s', $member['listId'], $member['subscriberHash']));
+            $mailChimp->delete(\sprintf('lists/%s/members/%s', $this->listId, $memberId));
         }
+
+        $mailChimp->delete(\sprintf('lists/%s', $this->listId));
 
         parent::tearDown();
     }
@@ -104,9 +131,11 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     {
         $content = \json_decode($this->response->content(), true);
 
+        var_dump($content);
+
         $this->assertResponseStatus(404);
         self::assertArrayHasKey('message', $content);
-        self::assertEquals(\sprintf('MailChimpMember[%s] not found', $subscriberHash), $content['message']);
+        self::assertRegexp('^(?=.*\bMailChimpMember\b)(?=.*\bnot\b)(?=.*\bfound\b).*$^', $content['message']);
     }
 
     /**
@@ -134,6 +163,7 @@ abstract class MemberTestCase extends WithDatabaseTestCase
      */
     protected function createMember(array $data): MailChimpMember
     {
+        $data = array_merge($data, ['list_id' => $this->listId]);
         $member = new MailChimpMember($data);
 
         $this->entityManager->persist($member);
@@ -151,7 +181,10 @@ abstract class MemberTestCase extends WithDatabaseTestCase
      */
     protected function createList(array $data): MailChimpList
     {
-        $list = new MailChimpList($data);
+        $response = $this->post('/mailchimp/lists', $data);
+        $list = \json_decode($this->response->content(), true);
+        
+        $list = new MailChimpList($list);
 
         $this->entityManager->persist($list);
         $this->entityManager->flush();
@@ -166,7 +199,21 @@ abstract class MemberTestCase extends WithDatabaseTestCase
      */
     protected function getListData(): Array
     {
-        return MailChimpList::$listData;
+        return static::$listData;
+    }
+
+    /**
+     * Get sample member data with dynamic email as to not be 
+     * banned by mailchimp for spamming with multiple unit tests :)
+     *
+     * @return array
+     */
+    protected function getMemberData(): Array
+    {
+        $udatedMemberData = static::$memberData;
+        // "Dynamic Email"
+        $udatedMemberData['email_address'] = substr(md5(strval(time())), 0, 8) . '@gmail.com';
+        return $udatedMemberData;
     }
 
     /**

@@ -54,6 +54,13 @@ class MailChimpMember extends MailChimpEntity
     private $language;
 
     /**
+     * @ORM\Column(name="list_id", type="string", nullable=true)
+     *
+     * @var array
+     */
+    private $listId;
+
+    /**
      * @ORM\Column(name="location", type="array", nullable=true)
      *
      * @var array
@@ -182,7 +189,7 @@ class MailChimpMember extends MailChimpEntity
             'subscriber_hash' => 'required|string',
             'timestamp_opt' => 'nullable|string',
             'timestamp_signup' => 'nullable|string',
-            'vip' => 'nullable|string'
+            'vip' => 'nullable|boolean'
         ];
     }
 
@@ -272,6 +279,20 @@ class MailChimpMember extends MailChimpEntity
     }
 
     /**
+     * Set list id.
+     *
+     * @param string $listId
+     *
+     * @return MailChimpMember
+     */
+    public function setListId(string $listId): MailChimpMember
+    {
+        $this->listId = $listId;
+
+        return $this;
+    }
+
+    /**
      * Set location.
      *
      * @param array $location
@@ -302,11 +323,11 @@ class MailChimpMember extends MailChimpEntity
     /**
      * Set marketing permissions.
      *
-     * @param bool $marketingPermissions
+     * @param array $marketingPermissions
      *
      * @return MailChimpMember
      */
-    public function setMarketingPermissions(bool $marketingPermissions): MailChimpMember
+    public function setMarketingPermissions(array $marketingPermissions): MailChimpMember
     {
         $this->marketingPermissions = $marketingPermissions;
 
@@ -372,11 +393,11 @@ class MailChimpMember extends MailChimpEntity
     /**
      * Set merge fields.
      *
-     * @param boolean $vip
+     * @param bool $vip
      *
      * @return MailChimpMember
      */
-    public function setVip(array $vip): MailChimpMember
+    public function setVip(bool $vip): MailChimpMember
     {
         $this->vip = $vip;
 
