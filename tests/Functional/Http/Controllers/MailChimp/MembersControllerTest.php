@@ -63,7 +63,6 @@ class MembersControllerTest extends MemberTestCase
         $this->delete(sprintf('/mailchimp/lists/%s/members/invalid-member-id', $this->listId));
 
         $this->assertMemberNotFoundResponse('invalid-member-id');
-        $this->assertResponseStatus(404);
     }
 
     /**
@@ -73,13 +72,14 @@ class MembersControllerTest extends MemberTestCase
      */
     public function testRemoveMemberSuccessfully(): void
     {
-        $member = $this->getMemberData();
+        $memberData = $this->getMemberData();
+        $this->createMember($memberData);
 
-        $this->post(\sprintf('/mailchimp/lists/%s/members', $this->listId), $member);
+        $this->post(\sprintf('/mailchimp/lists/%s/members', $this->listId), $memberData);
         $member = \json_decode($this->response->content(), true);
 
         $this->delete(\sprintf('/mailchimp/lists/%s/members/%s', $this->listId, $member['mail_chimp_id']));
-        
+
         $this->assertResponseOk();
         self::assertEmpty(\json_decode($this->response->content(), true));
     }
@@ -93,7 +93,7 @@ class MembersControllerTest extends MemberTestCase
     {
         $this->get(sprintf('/mailchimp/lists/%s/members/invalid-member-id', $this->listId));
 
-        $this->assertResponseStatus(500);
+        $this->assertMemberNotFoundResponse('invalid-member-id');
     }
 
     /**
@@ -103,12 +103,10 @@ class MembersControllerTest extends MemberTestCase
      */
     public function testShowMemberSuccessfully(): void
     {
-        $member = $this->getMemberData();
+        $memberData = $this->getMemberData();
+        $member = $this->createMember($memberData);
 
-        $this->post(\sprintf('/mailchimp/lists/%s/members', $this->listId), $member);
-        $member = \json_decode($this->response->content(), true);
-
-        $this->get(sprintf('/mailchimp/lists/%s/members', $this->listId));
+        $this->get(sprintf('/mailchimp/lists/%s/members/%s', $this->listId, $member->getSubscriberHash()));
         $content = \json_decode($this->response->content(), true);
 
         $this->assertResponseOk();
@@ -129,7 +127,6 @@ class MembersControllerTest extends MemberTestCase
         $this->put(sprintf('/mailchimp/lists/%s/members/invalid-member-id', $this->listId));
 
         $this->assertMemberNotFoundResponse('invalid-member-id');
-        $this->assertResponseStatus(404);
     }
 
     /**
@@ -139,23 +136,24 @@ class MembersControllerTest extends MemberTestCase
      */
     public function testUpdateMemberSuccessfully(): void
     {
-        $member = $this->getMemberData();
+        $memberData = $this->getMemberData();
+        $this->createMember($memberData);
 
-        $this->post(\sprintf('/mailchimp/lists/%s/members', $this->listId), $member);
+        $this->post(\sprintf('/mailchimp/lists/%s/members', $this->listId), $memberData);
         $member = \json_decode($this->response->content(), true);
         
-        if ($member['mail_chimp_id']) {
+        if (isset($member['mail_chimp_id'])) {
             $this->createdMemberIds[] = $member['mail_chimp_id']; // Store MailChimp list id for cleaning purposes
         }
 
-        $this->put(\sprintf('/mailchimp/lists/%s/members/%s', $this->listId, $member['mail_chimp_id']), ['ip_opt' => '127.0.0.1']);
+        $this->put(\sprintf('/mailchimp/lists/%s/members/%s', $this->listId, $member['mail_chimp_id']), [ 'status' => 'unsubscribed' ]);
         $content = \json_decode($this->response->content(), true);
 
         $this->assertResponseOk();
 
-        foreach (\array_keys($member) as $key) {
+        foreach (\array_keys($memberData) as $key) {
             self::assertArrayHasKey($key, $content);
-            self::assertEquals('updated', $content['ip_opt']);
+            self::assertEquals('unsubscribed', $content['status']);
         }
     }
 
@@ -166,12 +164,10 @@ class MembersControllerTest extends MemberTestCase
      */
     public function testUpdateMemberValidationFailed(): void
     {
-        $member = $this->getMemberData();
+        $memberData = $this->getMemberData();
+        $member = $this->createMember($memberData);
 
-        $this->post(\sprintf('/mailchimp/lists/%s/members', $this->listId), $member);
-        $member = \json_decode($this->response->content(), true);
-
-        $this->put(sprintf('/mailchimp/lists/%s/members/%s', $this->listId, $member['mail_chimp_id']), ['status' => 'maybe']);
+        $this->put(sprintf('/mailchimp/lists/%s/members/%s', $this->listId, $member->getSubscriberHash()), ['status' => 'maybe']);
         $content = \json_decode($this->response->content(), true);
 
         $this->assertResponseStatus(400);

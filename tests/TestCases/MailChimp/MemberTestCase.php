@@ -131,6 +131,7 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     {
         $content = \json_decode($this->response->content(), true);
 
+        $this->assertResponseStatus(404);
         self::assertArrayHasKey('message', $content);
         self::assertRegexp('^(?=.*\bMailChimpMember\b)(?=.*\bnot\b)(?=.*\bfound\b).*$^', $content['message']);
     }
@@ -156,18 +157,9 @@ abstract class MemberTestCase extends WithDatabaseTestCase
      *
      * @return \App\Database\Entities\MailChimp\MailChimpMember
      */
-    protected function createMember(): MailChimpMember
+    protected function createMember(array $memberData): MailChimpMember
     {
-        $member = $this->getMemberData();
-
-        $this->post(\sprintf('/mailchimp/lists/%s/members', $this->listId), $member);
-        $member = \json_decode($this->response->content(), true);
-
-        if (isset($member['mail_chimp_id'])) {
-            $this->createdMemberIds[] = $member['mail_chimp_id']; // Store MailChimp list id for cleaning purposes
-        }
-
-        $member = array_merge($member, ['list_id' => $this->listId]);
+        $member = array_merge($memberData, ['list_id' => $this->listId]);
         $member = new MailChimpMember($member);
         $this->entityManager->persist($member);
         $this->entityManager->flush();

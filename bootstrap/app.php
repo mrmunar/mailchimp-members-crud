@@ -69,6 +69,7 @@ $app->singleton(Illuminate\Contracts\Console\Kernel::class, App\Console\Kernel::
 
 $app->register(LaravelDoctrine\ORM\DoctrineServiceProvider::class);
 $app->register(\Mailchimp\MailchimpServiceProvider::class);
+$app->register(Appzcoder\LumenRoutesList\RoutesCommandServiceProvider::class);
 
 /*
 |--------------------------------------------------------------------------

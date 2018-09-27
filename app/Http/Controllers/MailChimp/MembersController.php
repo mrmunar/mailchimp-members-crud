@@ -43,9 +43,6 @@ class MembersController extends Controller
         // Instantiate entity
         $member = new MailChimpMember($request->all());
 
-        // Set List ID from route parameter
-        $member->setListId($listId);
-
         // Validate entity
         $validator = $this->getValidationFactory()->make($member->toMailChimpArray(), $member->getValidationRules());
 
@@ -96,7 +93,7 @@ class MembersController extends Controller
             // Remove member from database
             $this->removeEntity($member);
             // Remove member from MailChimp
-            $this->mailChimp->delete(\sprintf('/lists/%s/members/%s', $member->getMailChimpId(), $member->getSubscriberHash()));
+            $this->mailChimp->delete(\sprintf('/lists/%s/members/%s', $member->getListId(), $member->getSubscriberHash()));
         } catch (Exception $exception) {
             return $this->errorResponse(['message' => $exception->getMessage()]);
         }
@@ -111,14 +108,14 @@ class MembersController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show(string $listId, string $subscriberHash = null): JsonResponse
+    public function show(string $listId, string $subscriberHash): JsonResponse
     {
         // Set filters based on route parameters
-        $filters = array('list_id' => $listId);
+        $filters = array('listId' => $listId);
 
         // Add in subscriber hash if available
         if ($subscriberHash) {
-            $filters = array_merge($filters, array('subscriber_hash' => $subscriberHash));
+            $filters = array_merge($filters, array('subscriberHash' => $subscriberHash));
         }
 
         /** @var \App\Database\Entities\MailChimp\MailChimpMember|null $member */
@@ -173,7 +170,7 @@ class MembersController extends Controller
             // Update member into database
             $this->saveEntity($member);
             // Update member into MailChimp
-            $this->mailChimp->patch(\sprintf('/lists/%s/members/%s', $member->getMailChimpId(), $member->getSubscriberHash()), $member->toMailChimpArray());
+            $this->mailChimp->patch(\sprintf('/lists/%s/members/%s', $member->getListId(), $member->getSubscriberHash()), $member->toMailChimpArray());
         } catch (Exception $exception) {
             return $this->errorResponse(['message' => $exception->getMessage()]);
         }
