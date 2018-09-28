@@ -16,7 +16,6 @@ class MembersControllerTest extends MemberTestCase
     {
         $memberData = $this->getMemberData();
         $this->post(\sprintf('/mailchimp/lists/%s/members', $this->listId), $memberData);
-
         $member = \json_decode($this->response->getContent(), true);
 
         $this->assertResponseOk();
@@ -51,6 +50,18 @@ class MembersControllerTest extends MemberTestCase
 
             self::assertArrayHasKey($key, $content['errors']);
         }
+    }
+
+    /**
+     * Test application returns error response when member not found.
+     *
+     * @return void
+     */
+    public function testCreateMemberInvalidListIdException(): void
+    {
+        $this->post(\sprintf('/mailchimp/lists/invalid-list-id/members/%s', static::$dummyMemberId));
+
+        $this->assertListNotFoundResponse('invalid-member-id');
     }
 
     /**

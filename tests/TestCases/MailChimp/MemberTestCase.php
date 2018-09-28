@@ -27,6 +27,11 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     protected $listId = '';
 
     /**
+     * @var string
+     */
+    protected static $dummyMemberId = 'e10adc3949ba59abbe56e057f20f883e';
+
+    /**
      * @var array
      */
     protected static $memberData = [
@@ -108,20 +113,20 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     public function tearDown(): void
     {
         /** @var Mailchimp $mailChimp */
-        // $mailChimp = $this->app->make(Mailchimp::class);
+        $mailChimp = $this->app->make(Mailchimp::class);
 
-        // foreach ($this->createdMemberIds as $memberId) {
-        //     // Delete list on MailChimp after test
-        //     $mailChimp->delete(\sprintf('lists/%s/members/%s', $this->listId, $memberId));
-        // }
+        foreach ($this->createdMemberIds as $memberId) {
+            // Delete list on MailChimp after test
+            $mailChimp->delete(\sprintf('lists/%s/members/%s', $this->listId, $memberId));
+        }
 
-        // $mailChimp->delete(\sprintf('lists/%s', $this->listId));
+        $mailChimp->delete(\sprintf('lists/%s', $this->listId));
 
         parent::tearDown();
     }
 
     /**
-     * Asserts error response when list not found.
+     * Asserts error response when member not found.
      *
      * @param string $listId
      *
@@ -133,7 +138,25 @@ abstract class MemberTestCase extends WithDatabaseTestCase
 
         $this->assertResponseStatus(404);
         self::assertArrayHasKey('message', $content);
-        self::assertRegexp('^(?=.*\bMailChimpMember\b)(?=.*\bnot\b)(?=.*\bfound\b).*$^', $content['message']);
+        self::assertEquals(\sprintf('MailChimpMember[%s] not found', $subscriberHash), $content['message']);
+    }
+
+    /**
+     * Asserts error response when list not found.
+     *
+     * @param string $listId
+     *
+     * @return void
+     */
+    protected function assertListNotFoundResponse(string $listId): void
+    {
+        $content = \json_decode($this->response->content(), true);
+
+        var_dump(['listid here', $content]);
+
+        $this->assertResponseStatus(405);
+        self::assertArrayHasKey('message', $content);
+        self::assertEquals(\sprintf('MailChimpList[%s] not found', $listId), $content['message']);
     }
 
     /**
@@ -178,12 +201,12 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     {
         $this->post('/mailchimp/lists', $data);
         $list = \json_decode($this->response->content(), true);
-        
+
         $list = new MailChimpList($list);
 
         $this->entityManager->persist($list);
         $this->entityManager->flush();
-
+        
         return $list;
     }
 
@@ -199,7 +222,8 @@ abstract class MemberTestCase extends WithDatabaseTestCase
 
     /**
      * Get sample member data with dynamic email as to not be 
-     * banned by mailchimp for spamming with multiple unit tests :)
+     * banned by mailchimp for spamming with multiple unit tests
+     * using the same email. :)
      *
      * @return array
      */

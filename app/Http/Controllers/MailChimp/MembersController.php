@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\MailChimp;
 
+use App\Database\Entities\MailChimp\MailChimpList;
 use App\Database\Entities\MailChimp\MailChimpMember;
 use App\Http\Controllers\Controller;
 use Doctrine\ORM\EntityManagerInterface;
@@ -40,6 +41,17 @@ class MembersController extends Controller
      */
     public function create(Request $request, string $listId): JsonResponse
     {
+        // Check if list id exists in local database
+        /** @var \App\Database\Entities\MailChimp\MailChimpList|null $list */
+        $list = $this->entityManager->getRepository(MailChimpList::class)->findOneBy(array('mailChimpId' => $listId));
+
+        if ($list === null) {
+            return $this->errorResponse(
+                ['message' => \sprintf('MailChimpList[%s] not found', $listId)],
+                405
+            );
+        }
+
         // Instantiate entity
         $member = new MailChimpMember($request->all());
 
