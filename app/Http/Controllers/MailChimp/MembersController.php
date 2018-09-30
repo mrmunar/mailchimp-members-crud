@@ -48,7 +48,7 @@ class MembersController extends Controller
         if ($list === null) {
             return $this->errorResponse(
                 ['message' => \sprintf('MailChimpList[%s] not found', $listId)],
-                405
+                404
             );
         }
 

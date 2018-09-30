@@ -59,9 +59,9 @@ class MembersControllerTest extends MemberTestCase
      */
     public function testCreateMemberInvalidListIdException(): void
     {
-        $this->post(\sprintf('/mailchimp/lists/invalid-list-id/members/%s', static::$dummyMemberId));
+        $this->post(\sprintf('/mailchimp/lists/invalid-list-id/members'));
 
-        $this->assertListNotFoundResponse('invalid-member-id');
+        $this->assertListNotFoundResponse('invalid-list-id');
     }
 
     /**
