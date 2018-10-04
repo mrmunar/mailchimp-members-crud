@@ -27,6 +27,12 @@ abstract class MemberTestCase extends WithDatabaseTestCase
     protected $listId = '';
 
     /**
+     * @var string
+     */
+    protected static $dummyMemberId = 'e10adc3949ba59abbe56e057f20f883e';
+
+
+    /**
      * @var array
      */
     protected static $memberData = [

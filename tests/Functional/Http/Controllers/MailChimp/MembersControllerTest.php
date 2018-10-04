@@ -53,7 +53,7 @@ class MembersControllerTest extends MemberTestCase
     }
 
     /**
-     * Test application returns error response when member not found.
+     * Test application returns error response when list id not found.
      *
      * @return void
      */
@@ -96,6 +96,18 @@ class MembersControllerTest extends MemberTestCase
     }
 
     /**
+     * Test application returns error response when list id not found.
+     *
+     * @return void
+     */
+    public function testRemoveMemberInvalidListIdException(): void
+    {
+        $this->get(\sprintf('/mailchimp/lists/invalid-list-id/members/%s', static::$dummyMemberId));
+
+        $this->assertListNotFoundResponse('invalid-list-id');
+    }
+
+    /**
      * Test application returns error response when member not found.
      *
      * @return void
@@ -126,6 +138,18 @@ class MembersControllerTest extends MemberTestCase
             self::assertArrayHasKey($key, $content);
             self::assertEquals($value, $content[$key]);
         }
+    }
+
+    /**
+     * Test application returns error response when list id not found.
+     *
+     * @return void
+     */
+    public function testShowMemberInvalidListIdException(): void
+    {
+        $this->get(\sprintf('/mailchimp/lists/invalid-list-id/members/%s', static::$dummyMemberId));
+
+        $this->assertListNotFoundResponse('invalid-list-id');
     }
 
     /**
@@ -186,5 +210,17 @@ class MembersControllerTest extends MemberTestCase
         self::assertArrayHasKey('errors', $content);
         self::assertArrayHasKey('status', $content['errors']);
         self::assertEquals('Invalid data given', $content['message']);
+    }
+
+    /**
+     * Test application returns error response when list id not found.
+     *
+     * @return void
+     */
+    public function testUpdateMemberInvalidListIdException(): void
+    {
+        $this->put(\sprintf('/mailchimp/lists/invalid-list-id/members/%s', static::$dummyMemberId));
+
+        $this->assertListNotFoundResponse('invalid-list-id');
     }
 }

@@ -90,6 +90,17 @@ class MembersController extends Controller
      */
     public function remove(string $listId, string $subscriberHash): JsonResponse
     {
+        // Check if list id exists in local database
+        /** @var \App\Database\Entities\MailChimp\MailChimpList|null $list */
+        $list = $this->entityManager->getRepository(MailChimpList::class)->findOneBy(array('mailChimpId' => $listId));
+
+        if ($list === null) {
+            return $this->errorResponse(
+                ['message' => \sprintf('MailChimpList[%s] not found', $listId)],
+                404
+            );
+        }
+
         /** @var \App\Database\Entities\MailChimp\MailChimpMember|null $member */
         $member = $this->entityManager->getRepository(MailChimpMember::class)
             ->findOneBy(array('listId' => $listId, 'subscriberHash' => $subscriberHash));
@@ -122,6 +133,17 @@ class MembersController extends Controller
      */
     public function show(string $listId, string $subscriberHash): JsonResponse
     {
+        // Check if list id exists in local database
+        /** @var \App\Database\Entities\MailChimp\MailChimpList|null $list */
+        $list = $this->entityManager->getRepository(MailChimpList::class)->findOneBy(array('mailChimpId' => $listId));
+
+        if ($list === null) {
+            return $this->errorResponse(
+                ['message' => \sprintf('MailChimpList[%s] not found', $listId)],
+                404
+            );
+        }
+
         // Set filters based on route parameters
         $filters = array('listId' => $listId);
 
@@ -153,6 +175,17 @@ class MembersController extends Controller
      */
     public function update(Request $request, string $listId, string $subscriberHash): JsonResponse
     {
+        // Check if list id exists in local database
+        /** @var \App\Database\Entities\MailChimp\MailChimpList|null $list */
+        $list = $this->entityManager->getRepository(MailChimpList::class)->findOneBy(array('mailChimpId' => $listId));
+
+        if ($list === null) {
+            return $this->errorResponse(
+                ['message' => \sprintf('MailChimpList[%s] not found', $listId)],
+                404
+            );
+        }
+        
         /** @var \App\Database\Entities\MailChimp\MailChimpmember|null $member */
         $member = $this->entityManager->getRepository(MailChimpMember::class)
             ->findOneBy(array('listId' => $listId, 'subscriberHash' => $subscriberHash));
